@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Canteen Order Booking</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; background: #f2f2f2; }
+    form { background: white; padding: 1rem 2rem; border-radius: 8px; max-width: 400px; margin: auto; }
+    label, input, select { display: block; width: 100%; margin-bottom: 1rem; }
+    button { padding: 0.5rem 1rem; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    #result { margin-top: 1rem; text-align: center; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2 style="text-align:center;">Canteen Order Booking</h2>
+  <form id="orderForm">
+    <label>Student Name</label>
+    <input type="text" id="studentName" required />
+
+    <label>Dish</label>
+    <select id="dish">
+      <option value="Paneer Roll">Paneer Roll</option>
+      <option value="Veg Thali">Veg Thali</option>
+      <option value="Burger">Burger</option>
+    </select>
+
+    <label>Pickup Time</label>
+    <input type="time" id="pickupTime" required />
+
+    <button type="submit">Book Order</button>
+  </form>
+
+  <div id="result"></div>
+
+  <script>
+    document.getElementById('orderForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const data = {
+        studentName: document.getElementById('studentName').value,
+        dish: document.getElementById('dish').value,
+        pickupTime: document.getElementById('pickupTime').value,
+      };
+
+      try {
+        const res = await fetch('http://localhost:5000/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+        if (res.ok) {
+          document.getElementById('result').innerText = `✅ Order placed! Your token number is ${result.tokenNumber}`;
+        } else {
+          document.getElementById('result').innerText = `❌ Error: ${result.error}`;
+        }
+      } catch (err) {
+        document.getElementById('result').innerText = '❌ Could not connect to server';
+      }
+    });
+  </script>
+</body>
+</html>

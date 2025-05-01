@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Canteen Orders - Staff</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; background: #f0f0f0; }
+    h2 { text-align: center; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { border: 1px solid #ccc; padding: 0.75rem; text-align: left; }
+    th { background: #007bff; color: white; }
+    tr:nth-child(even) { background: #f9f9f9; }
+  </style>
+</head>
+<body>
+    <label for="orderStatus">Filter by Status:</label>
+    <select id="orderStatus">
+      <option value="all">All</option>
+      <option value="Pending">Pending</option>
+      <option value="Completed">Completed</option>
+    </select>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>Token Number</th>
+          <th>Student Name</th>
+          <th>Dish</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="orderTableBody">
+        <!-- Orders will be inserted here -->
+      </tbody>
+    </table>
+    
+    <script>
+      const statusFilter = document.getElementById('orderStatus');
+      statusFilter.addEventListener('change', updateOrders);
+    
+      function updateOrders() {
+        const filterValue = statusFilter.value.toLowerCase();  // Normalize filter value
+        fetch('http://localhost:5000/api/orders')
+          .then(response => response.json())
+          .then(data => {
+            console.log("Raw order status values:");
+            data.forEach(order => {
+              console.log(order.status);  // 🔍 Check actual values here
+            });
+      
+            const filteredData = filterValue === 'all'
+              ? data
+              : data.filter(order => order.status.toLowerCase() === filterValue);
+      
+            const tableBody = document.getElementById('orderTableBody');
+            tableBody.innerHTML = '';
+      
+            filteredData.forEach(order => {
+              const row = document.createElement('tr');
+              row.innerHTML = `
+                <td>${order.tokenNumber}</td>
+                <td>${order.studentName}</td>
+                <td>${order.dishName || 'N/A'}</td>
+                <td>${order.status === 'pending' ? `<button onclick="markCompleted(${order.tokenNumber})">Mark as Completed</button>` : '✅ Completed'}</td>
+              `;
+              tableBody.appendChild(row);
+            });
+          })
+          .catch(error => {
+            console.error('Error fetching orders:', error);
+          });
+      }
+       
+      
+      // Initial load
+      updateOrders();
+
+      function markCompleted(tokenNumber) {
+        fetch(`http://localhost:5000/api/orders/${tokenNumber}/complete`, {
+          method: 'PUT'
+        })
+          .then(res => {
+            if (res.ok) {
+              alert(`Order ${tokenNumber} marked as completed`);
+              updateOrders(); // reload updated list
+            } else {
+              return res.json().then(err => {
+                alert(`Error: ${err.message || 'Could not update order'}`);
+              });
+            }
+          })
+          .catch(err => {
+            alert('Server error');
+          });
+      }
+      
+    </script>    
+</body>
+</html>
